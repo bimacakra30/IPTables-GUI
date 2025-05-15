@@ -18,6 +18,19 @@ IPTables GUI Control Panel adalah antarmuka web modern berbasis **React**, **Vit
 
 ## 📦 Instalasi
 
+### ⚙️ Konfigurasi Sudo (Visudo)
+
+Agar backend dapat menjalankan perintah `iptables` tanpa meminta password, tambahkan aturan berikut pada file sudoers dengan perintah:
+
+```bash
+sudo visudo
+```
+Kemudian tambahkan baris berikut:
+```bash
+root ALL=(ALL) NOPASSWD: /sbin/iptables
+```
+Aturan ini memungkinkan user root (atau sesuaikan dengan user yang menjalankan backend) menjalankan iptables tanpa perlu memasukkan password, sehingga proses automatisasi bisa berjalan lancar dan aman.
+
 ### 1. Pastikan **Node.js** telah terinstal di sistem Anda.
 
 > 📝 [Download Node.js](https://nodejs.org/) jika belum tersedia.
