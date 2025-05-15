@@ -38,8 +38,8 @@ Aturan ini memungkinkan user root (atau sesuaikan dengan user yang menjalankan b
 ### 2. Clone proyek ini
 
 ```bash
-git clone https://github.com/namamu/iptables-frontend.git
-cd iptables-frontend
+git clone https://github.com/bimacakra30/IPTables-GUI.git
+cd IPTables-GUI
 ```
 
 ### 3. Install semua dependensi
