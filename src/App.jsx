@@ -80,7 +80,6 @@ export default function App() {
     }
   }, [table, chain]);
 
-
   useEffect(() => {
     const savedBaseUrl = localStorage.getItem("baseUrl");
     const savedTimestamp = localStorage.getItem("baseUrlTimestamp");
@@ -381,6 +380,57 @@ export default function App() {
   function getProtocolName(prot) {
     const entry = protocolMap[prot.toString()];
     return entry ? entry.name : prot;
+  }
+
+  function decodeTcpFlags(flagsHexStr, returnArray = false) {
+    const match = flagsHexStr.match(/tcp flags:0x[0-9A-Fa-f]+\/0x([0-9A-Fa-f]+)/);
+    if (!match) return returnArray ? [] : "-";
+
+    const hex = match[1];
+    const value = parseInt(hex, 16);
+
+    const flagsMap = {
+      FIN: 0x01,
+      SYN: 0x02,
+      RST: 0x04,
+      PSH: 0x08,
+      ACK: 0x10,
+      URG: 0x20,
+      ECE: 0x40,
+      CWR: 0x80
+    };
+
+    const activeFlags = Object.entries(flagsMap)
+      .filter(([_, bit]) => (value & bit) !== 0)
+      .map(([name]) => name);
+
+    return returnArray ? activeFlags : activeFlags.join(", ") || "-";
+  }
+
+  function extractTcpFlagsRaw(rule) {
+    const match = rule.match(/tcp flags:0x[0-9A-Fa-f]+\/0x[0-9A-Fa-f]+/);
+    return match ? match[0] : "-";
+  }
+
+  function FlagBadge({ flag }) {
+    const colors = {
+      SYN: "bg-blue-100 text-blue-800",
+      FIN: "bg-red-100 text-red-800",
+      RST: "bg-yellow-100 text-yellow-800",
+      PSH: "bg-green-100 text-green-800",
+      ACK: "bg-purple-100 text-purple-800",
+      URG: "bg-pink-100 text-pink-800",
+      ECE: "bg-orange-100 text-orange-800",
+      CWR: "bg-gray-100 text-gray-800"
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center px-2 py-0.5 mr-1 mb-1 rounded-full text-xs font-medium ${colors[flag] || "bg-slate-100 text-slate-800"}`}
+      >
+        {flag}
+      </span>
+    );
   }
 
   return (
@@ -685,6 +735,9 @@ export default function App() {
                           <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                             Deskripsi Aturan
                           </th>
+                          <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase border-b w-36 text-center">
+                            TCP Flags
+                          </th>
                           <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-16 text-center">
                             Pkts
                           </th>
@@ -701,7 +754,7 @@ export default function App() {
                           if (rule.includes("Chain")) {
                             return (
                               <tr key={`chain-${idx}`} className="bg-slate-100 font-semibold text-center">
-                                <td colSpan={5} className="px-4 py-3 text-sm text-slate-900">
+                                <td colSpan={6} className="px-4 py-3 text-sm text-slate-900">
                                   {rule}
                                 </td>
                               </tr>
@@ -714,6 +767,8 @@ export default function App() {
                           const ruleNumber = extractRuleNumber(rule);
                           const { pkts, bytes, prot } = extractPktsAndBytes(rule);
                           const ruleProtocolName = getProtocolName(prot);
+                          const flagsRaw = extractTcpFlagsRaw(rule);
+                          const flagsArray = decodeTcpFlags(flagsRaw, true);
 
                           return (
                             <tr key={idx} className="hover:bg-slate-50">
@@ -722,6 +777,17 @@ export default function App() {
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-700 font-mono break-words max-w-xs sm:max-w-full">
                                 {ruleProtocolName} {stripHeaderInfo(rule)}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center text-slate-700">
+                                {flagsArray.length > 0 ? (
+                                  <div className="flex flex-wrap justify-center">
+                                    {flagsArray.map((flag, i) => (
+                                      <FlagBadge key={i} flag={flag} />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  "-"
+                                )}
                               </td>
                               <td className="px-4 py-3 text-sm text-center text-slate-700">{pkts}</td>
                               <td className="px-4 py-3 text-sm text-center text-slate-700">{bytes}</td>
