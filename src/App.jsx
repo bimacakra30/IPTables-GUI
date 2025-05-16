@@ -735,8 +735,8 @@ export default function App() {
                           <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                             Deskripsi Aturan
                           </th>
-                          <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase border-b w-36 text-center">
-                            TCP Flags
+                          <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-36 text-center">
+                            TCP FLAGS
                           </th>
                           <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-16 text-center">
                             Pkts
