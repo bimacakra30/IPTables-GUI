@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import protocolMap from '../protocol-map.json';
 
 const ShieldIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -368,6 +369,20 @@ export default function App() {
     return rule;
   }
 
+  function extractPktsAndBytes(rule) {
+    const parts = rule.trim().split(/\s+/);
+    return {
+      pkts: parts[1] || "-",
+      bytes: parts[2] || "-",
+      prot: parts[4] || "-"
+    };
+  }
+
+  function getProtocolName(prot) {
+    const entry = protocolMap[prot.toString()];
+    return entry ? entry.name : prot;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 py-4 px-2 sm:px-4 lg:px-6">
       {showModal && (
@@ -697,7 +712,8 @@ export default function App() {
                           }
 
                           const ruleNumber = extractRuleNumber(rule);
-                          const { pkts, bytes } = extractPktsAndBytes(rule);
+                          const { pkts, bytes, prot } = extractPktsAndBytes(rule);
+                          const ruleProtocolName = getProtocolName(prot);
 
                           return (
                             <tr key={idx} className="hover:bg-slate-50">
@@ -705,7 +721,7 @@ export default function App() {
                                 {ruleNumber || idx + 1}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-700 font-mono break-words max-w-xs sm:max-w-full">
-                                {stripHeaderInfo(rule)}
+                                {ruleProtocolName} {stripHeaderInfo(rule)}
                               </td>
                               <td className="px-4 py-3 text-sm text-center text-slate-700">{pkts}</td>
                               <td className="px-4 py-3 text-sm text-center text-slate-700">{bytes}</td>
