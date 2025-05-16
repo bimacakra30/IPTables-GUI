@@ -25,13 +25,14 @@ function runCommand(cmd) {
 app.get("/iptables", async (req, res) => {
   const { table = "filter", chain = "INPUT" } = req.query;
   try {
-    const output = await runCommand(`sudo ${IPTABLES_CMD} -t ${table} -L ${chain} -n --line-numbers`);
+    const output = await runCommand(`sudo ${IPTABLES_CMD} -t ${table} -L ${chain} -n -v --line-numbers`);
     const lines = output.split("\n").filter(Boolean);
     res.json({ rules: lines });
   } catch (err) {
     res.status(500).json({ message: "Gagal mengambil aturan iptables", error: err });
   }
 });
+
 
 app.post("/iptables/add", async (req, res) => {
   const { table, chain, protocol, srcIp, destIp, srcPort, destPort, action } = req.body;

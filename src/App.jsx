@@ -315,6 +315,32 @@ export default function App() {
     return null;
   }
 
+  function extractPktsAndBytes(rule) {
+    const match = rule.trim().match(/^\s*\d+\s+(\d+)\s+(\d+)\s+/);
+    if (match) {
+      return {
+        pkts: match[1],
+        bytes: match[2]
+      };
+    }
+    return { pkts: "-", bytes: "-" };
+  }
+
+function stripHeaderInfo(rule) {
+  const parts = rule.trim().split(/\s+/);
+  if (parts.length >= 10) {
+    const prot = parts[4];
+    const opt = parts[5];
+    const inputIf = parts[6];
+    const outputIf = parts[7];
+    const source = parts[8];
+    const destination = parts[9];
+    return `${prot} ${opt} ${inputIf} ${outputIf} ${source} → ${destination}`;
+  }
+  return rule;
+}
+
+
   return (
     <div className="min-h-screen bg-slate-50 py-4 px-2 sm:px-4 lg:px-6">
       {showModal && (
@@ -611,23 +637,30 @@ export default function App() {
                     <table className="min-w-full border-collapse table-auto">
                       <thead>
                         <tr className="bg-slate-50 sticky top-0 z-10">
-                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-12 text-center">
+                          <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-12">
                             No.
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                             Deskripsi Aturan
+                          </th>
+                          <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-16 text-center">
+                            Pkts
+                          </th>
+                          <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-20 text-center">
+                            Bytes
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 w-24">
                             Aksi
                           </th>
                         </tr>
                       </thead>
+
                       <tbody className="divide-y divide-slate-200">
                         {ruleList.map((rule, idx) => {
                           if (rule.includes("Chain")) {
                             return (
                               <tr key={`chain-${idx}`} className="bg-slate-100 font-semibold text-center">
-                                <td colSpan={3} className="px-4 py-3 text-sm text-slate-900">
+                                <td colSpan={5} className="px-4 py-3 text-sm text-slate-900">
                                   {rule}
                                 </td>
                               </tr>
@@ -636,15 +669,20 @@ export default function App() {
                           if (rule.trim() === "" || rule.includes("target")) {
                             return null;
                           }
+
                           const ruleNumber = extractRuleNumber(rule);
+                          const { pkts, bytes } = extractPktsAndBytes(rule);
+
                           return (
                             <tr key={idx} className="hover:bg-slate-50">
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-center font-medium text-slate-900">
                                 {ruleNumber || idx + 1}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-700 font-mono break-words max-w-xs sm:max-w-full">
-                                {rule}
+                                {stripHeaderInfo(rule)}
                               </td>
+                              <td className="px-4 py-3 text-sm text-center text-slate-700">{pkts}</td>
+                              <td className="px-4 py-3 text-sm text-center text-slate-700">{bytes}</td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm">
                                 <span
                                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeColor(
@@ -658,6 +696,7 @@ export default function App() {
                           );
                         })}
                       </tbody>
+
                     </table>
                   </div>
                 )}
