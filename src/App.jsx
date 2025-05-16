@@ -54,6 +54,7 @@ const chainsByTable = {
 const actions = ["ACCEPT", "DROP", "REJECT"];
 
 export default function App() {
+  const [manualRule, setManualRule] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [showModal, setShowModal] = useState(true);
   const [table, setTable] = useState("filter");
@@ -169,6 +170,33 @@ export default function App() {
     }
   }
 
+  async function addRawRule() {
+    if (!manualRule.trim()) return;
+    setIsLoading(true);
+    setMessage("Menambahkan aturan manual...");
+    setMessageType("info");
+
+    try {
+      const res = await fetch(`http://${baseUrl}/iptables/add-raw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rule: manualRule.trim(), table }),
+      });
+
+      if (!res.ok) throw new Error("Gagal menambahkan aturan manual");
+
+      const data = await res.json();
+      setMessage(data.message || "Aturan manual berhasil ditambahkan");
+      setMessageType("success");
+      setManualRule("");
+      fetchRules();
+    } catch (error) {
+      setMessage(error.message || "Gagal menambahkan aturan manual");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const isValidPort = (port) => {
     if (!port) return true;
@@ -326,20 +354,19 @@ export default function App() {
     return { pkts: "-", bytes: "-" };
   }
 
-function stripHeaderInfo(rule) {
-  const parts = rule.trim().split(/\s+/);
-  if (parts.length >= 10) {
-    const prot = parts[4];
-    const opt = parts[5];
-    const inputIf = parts[6];
-    const outputIf = parts[7];
-    const source = parts[8];
-    const destination = parts[9];
-    return `${prot} ${opt} ${inputIf} ${outputIf} ${source} → ${destination}`;
+  function stripHeaderInfo(rule) {
+    const parts = rule.trim().split(/\s+/);
+    if (parts.length >= 10) {
+      const prot = parts[4];
+      const opt = parts[5];
+      const inputIf = parts[6];
+      const outputIf = parts[7];
+      const source = parts[8];
+      const destination = parts[9];
+      return `${prot} ${opt} ${inputIf} ${outputIf} ${source} → ${destination}`;
+    }
+    return rule;
   }
-  return rule;
-}
-
 
   return (
     <div className="min-h-screen bg-slate-50 py-4 px-2 sm:px-4 lg:px-6">
@@ -654,7 +681,6 @@ function stripHeaderInfo(rule) {
                           </th>
                         </tr>
                       </thead>
-
                       <tbody className="divide-y divide-slate-200">
                         {ruleList.map((rule, idx) => {
                           if (rule.includes("Chain")) {
@@ -695,8 +721,28 @@ function stripHeaderInfo(rule) {
                             </tr>
                           );
                         })}
+                        <tr className="bg-gray-50">
+                          <td colSpan={5} className="px-4 py-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                className="flex-1 bg-white border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Contoh: -A INPUT -s 192.168.1.100 -j DROP"
+                                value={manualRule}
+                                onChange={(e) => setManualRule(e.target.value)}
+                                disabled={isLoading}
+                              />
+                              <button
+                                onClick={addRawRule}
+                                disabled={isLoading || !manualRule.trim()}
+                                className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
                       </tbody>
-
                     </table>
                   </div>
                 )}

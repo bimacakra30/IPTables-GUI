@@ -70,6 +70,22 @@ app.post("/iptables/delete", async (req, res) => {
   }
 });
 
+app.post("/iptables/add-raw", async (req, res) => {
+  const { rule, table } = req.body;
+  if (!rule || !table) {
+    return res.status(400).json({ message: "Rule dan table wajib diisi" });
+  }
+
+  const cmd = `sudo ${IPTABLES_CMD} -t ${table} ${rule}`;
+  try {
+    await runCommand(cmd);
+    res.json({ message: `Aturan berhasil ditambahkan: ${cmd}` });
+  } catch (err) {
+    res.status(500).json({ message: "Gagal menambahkan aturan manual", error: err });
+  }
+});
+
+
 app.listen(5000, () => {
   console.log("Server berjalan di http://localhost:5000");
 });
